@@ -1,0 +1,7 @@
+git clone https://github.com/Abdoul54/TP7
+npm install
+
+git clone https://github.com/Abdoul54/TP7
+npm install 
+
+OpenWeatherMap API key 
