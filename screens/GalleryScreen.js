@@ -1,126 +1,63 @@
-import {
-  FontAwesome6,
-  Ionicons,
-  MaterialCommunityIcons,
-} from "@expo/vector-icons";
-import {
-  CameraView,
-  takePictureAsync,
-  useCameraPermissions,
-} from "expo-camera";
-import React, { useRef, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Button,
-  Alert,
-} from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, FlatList, Image, StyleSheet, Button } from "react-native";
 import * as MediaLibrary from "expo-media-library";
 
-export default function GalleryScreen() {
-  const [facing, setFacing] = useState("back");
-  const [permission, requestPermission] = useCameraPermissions();
-  const cameraRef = useRef(null); // Camera reference
+function GalleryScreen({ navigation }) {
+  const [capturedPhotos, setCapturedPhotos] = useState([]);
 
-  if (!permission) {
-    // Camera permissions are still loading.
-    return <View />;
-  }
+  useEffect(() => {
+    loadCapturedPhotos();
+  }, []);
 
-  if (!permission.granted) {
-    // Camera permissions are not granted yet.
-    return (
-      <View style={styles.container}>
-        <Text style={{ textAlign: "center" }}>
-          We need your permission to show the camera
-        </Text>
-        <Button onPress={requestPermission} title="grant permission" />
-      </View>
-    );
-  }
-  function toggleCameraFacing() {
-    setFacing((current) => (current === "back" ? "front" : "back"));
-  }
-
-  const handleTakePicture = async (event) => {
+  const loadCapturedPhotos = async () => {
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission Required",
-          "Please grant access to your media library to save photos."
-        );
-        return;
-      }
+      if (status !== "granted") return;
 
-      if (!cameraRef.current) return;
+      const media = await MediaLibrary.getAssetsAsync({
+        mediaType: "photo",
+        first: 100, // Adjust limit as needed
+      });
 
-      const options = { quality: 1 };
-      const photo = await cameraRef.current.takePictureAsync(options);
-      console.log("Captured image URI:", photo.uri);
-
-      const asset = await MediaLibrary.createAssetAsync(photo.uri);
-      console.log("Saved photo to gallery with ID:", asset.id);
-      event.stopPropagation();
-      Alert.alert("Success", "Photo saved to gallery!");
+      setCapturedPhotos(media.assets);
     } catch (error) {
-      console.error("Error taking picture:", error);
-      Alert.alert("Error", "An error occurred while taking the picture.");
+      console.error("Error loading photos:", error);
     }
   };
 
+  const renderItem = ({ item }) => (
+    <Image source={{ uri: item.uri }} style={styles.galleryImage} />
+  );
+
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button}>
-            <MaterialCommunityIcons
-              name="view-gallery"
-              size={25}
-              color="white"
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => handleTakePicture(e)}
-          >
-            <FontAwesome6 name="camera" size={50} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => toggleCameraFacing()}
-          >
-            <Ionicons name="camera-reverse" size={25} color="white" />
-          </TouchableOpacity>
-        </View>
-      </CameraView>
+      <FlatList
+        data={capturedPhotos}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        numColumns={3}
+        horizontal={false}
+        style={styles.gallery}
+      />
+      <Button title="Back to Camera" onPress={() => navigation.goBack()} />
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    width: "100%",
   },
-  camera: {
+  gallery: {
     flex: 1,
+    marginTop: 10,
   },
-  buttonContainer: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: "transparent",
-    margin: 64,
-  },
-  button: {
-    flex: 1,
-    alignSelf: "flex-end",
-    alignItems: "center",
-  },
-  text: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
+  galleryImage: {
+    width: "33%",
+    height: 100,
+    margin: 1,
   },
 });
+
+export default GalleryScreen;

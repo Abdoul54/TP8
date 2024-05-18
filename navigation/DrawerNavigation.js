@@ -3,7 +3,8 @@ import TabNavigator from "./BottomTabNavigation";
 import SearchScreen from "../screens/SearchScreen";
 import WeatherScreen from "../screens/WeatherScreen";
 import GeolocationScreen from "../screens/GeolocationScreen";
-import GalleryScreen from "../screens/GalleryScreen";
+import CameraScreen from "../screens/CameraScreen";
+import SecondTabNavigator from "./SecondBottomTabNavigation";
 
 const Drawer = createDrawerNavigator();
 
@@ -13,7 +14,7 @@ const DrawerNavigator = () => (
     <Drawer.Screen name="Profile Contact" component={TabNavigator} />
     <Drawer.Screen name="Weather" component={WeatherScreen} />
     <Drawer.Screen name="Geolocation" component={GeolocationScreen} />
-    <Drawer.Screen name="Gallery" component={GalleryScreen} />
+    <Drawer.Screen name="Camera" component={SecondTabNavigator} />
   </Drawer.Navigator>
 );
 
